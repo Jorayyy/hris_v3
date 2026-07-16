@@ -16,6 +16,8 @@ return new class extends Migration
         $table->string('name'); // e.g., "Engineering Team", "Sales Shift"
         $table->string('pay_frequency')->default('monthly'); // weekly, monthly, custom
         $table->timestamps();
+        $table->foreignId('schedule_id')->nullable()->constrained()->onDelete('set null');
+
     });
 }
 

@@ -16,7 +16,9 @@ class TimeLog extends Model
     'lunch_in', 
     'break2_out', 
     'break2_in', 
-    'clock_out'
+    'clock_out',
+    'late_minutes',
+    'undertime_minutes' 
 ];
 
 

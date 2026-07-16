@@ -24,22 +24,43 @@ class DashboardController extends Controller
     }
 
 
-    public function toggleClock()
+        public function toggleClock()
     {
         $userId = auth()->id();
+        $user = auth()->user();
         $today = now()->toDateString();
         $nowTime = now()->toTimeString();
 
         $log = TimeLog::where('user_id', $userId)->where('date', $today)->first();
+        $schedule = $user->group?->schedule;
 
-        // Stage 1: Initial System Entry (IN)
+        // Stage 1: Initial System Entry (IN) with Late Calculation
         if (!$log) {
+            $lateMinutes = 0;
+
+            if ($schedule && $schedule->shift_in) {
+                $expectedIn = \Carbon\Carbon::createFromTimeString($schedule->shift_in);
+                $actualIn = \Carbon\Carbon::createFromTimeString($nowTime);
+
+                // If they clock in past the scheduled shift time + grace period
+                if ($actualIn->greaterThan($expectedIn->copy()->addMinutes($schedule->grace_period))) {
+                    $lateMinutes = $actualIn->diffInMinutes(\Carbon\Carbon::createFromTimeString($schedule->shift_in));
+                }
+            }
+
             TimeLog::create([
                 'user_id' => $userId,
                 'date' => $today,
                 'clock_in' => $nowTime,
+                'late_minutes' => $lateMinutes,
             ]);
-            return back()->with('status', 'Shift started successfully (IN).');
+
+            $msg = 'Shift started successfully (IN).';
+            if ($lateMinutes > 0) {
+                $msg .= " Flagged Late: {$lateMinutes} mins.";
+            }
+
+            return back()->with('status', $msg);
         }
 
         // Sequential Chronological State Tracker Matchers
@@ -73,9 +94,31 @@ class DashboardController extends Controller
             return back()->with('status', 'Returned from 2nd Break (IN).');
         }
 
+        // Stage 8: Shift Completed (OUT) with Undertime Calculation
         if (is_null($log->clock_out)) {
-            $log->update(['clock_out' => $nowTime]);
-            return back()->with('status', 'Shift completed successfully (OUT).');
+            $undertimeMinutes = 0;
+
+            if ($schedule && $schedule->shift_out) {
+                $expectedOut = \Carbon\Carbon::createFromTimeString($schedule->shift_out);
+                $actualOut = \Carbon\Carbon::createFromTimeString($nowTime);
+
+                // If they clock out earlier than the scheduled shift end time
+                if ($actualOut->lessThan($expectedOut)) {
+                    $undertimeMinutes = $actualOut->diffInMinutes($expectedOut);
+                }
+            }
+
+            $log->update([
+                'clock_out' => $nowTime,
+                'undertime_minutes' => $undertimeMinutes,
+            ]);
+
+            $msg = 'Shift completed successfully (OUT).';
+            if ($undertimeMinutes > 0) {
+                $msg .= " Flagged Undertime: {$undertimeMinutes} mins.";
+            }
+
+            return back()->with('status', $msg);
         }
 
         return back()->with('error', 'All shift parameters for today are locked.');

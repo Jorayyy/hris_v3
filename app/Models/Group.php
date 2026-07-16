@@ -12,4 +12,10 @@ class Group extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function schedule()
+{
+    return $this->belongsTo(Schedule::class);
+}
+
 }
