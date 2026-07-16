@@ -8,20 +8,21 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+        public function index()
     {
         $user = auth()->user();
         $today = now()->toDateString();
 
-        // Check if the user has an open time log row entry today
         $todayLog = TimeLog::where('user_id', $user->id)->where('date', $today)->first();
-        
-        // Fetch specific user histories
         $timeLogs = TimeLog::where('user_id', $user->id)->latest()->take(10)->get();
         $leaveRequests = LeaveRequest::where('user_id', $user->id)->latest()->get();
+        
+        // 💰 ADDED THIS LINE TO FETCH THE PAYROLL SLIPS:
+        $payrolls = \App\Models\Payroll::where('user_id', $user->id)->latest()->get();
 
-        return view('dashboard', compact('todayLog', 'timeLogs', 'leaveRequests'));
+        return view('dashboard', compact('todayLog', 'timeLogs', 'leaveRequests', 'payrolls'));
     }
+
 
     public function toggleClock()
     {

@@ -9,7 +9,7 @@
                     <span style="display: inline !important; color: #ffffff !important; visibility: visible !important;">💼 Switch to Admin Panel</span>
                 </a>
             @endif
-            
+
     </x-slot>
 
     <div class="py-12 bg-gray-50 min-h-screen" style="background-color: #f9fafb !important;">
@@ -182,8 +182,123 @@
                     </div>
                 </div>
 
+                                <!-- 💰 MY PAYSLIPS LEDGER BLOCK -->
+                <div class="bg-white shadow-sm sm:rounded-lg p-6 border border-gray-200" style="background-color: #ffffff !important; border: 1px solid #e5e7eb !important; padding: 1.5rem !important; border-radius: 0.5rem !important; margin-top: 1.5rem !important;">
+                    <h3 class="text-lg font-bold text-gray-700 mb-4" style="color: #374151 !important; font-size: 1.125rem !important; font-weight: 700 !important; margin-bottom: 1rem !important;">My Payroll Statements</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-500" style="width: 100% !important; text-align: left !important; border-collapse: collapse !important;">
+                            <thead style="background-color: #f3f4f6 !important;">
+                                <tr>
+                                    <th style="padding: 0.5rem !important; color: #374151 !important; font-weight: 600 !important;">Pay Period</th>
+                                    <th style="padding: 0.5rem !important; color: #374151 !important; font-weight: 600 !important;">Base Salary</th>
+                                    <th style="padding: 0.5rem !important; color: #059669 !important; font-weight: 600 !important;">Bonus</th>
+                                    <th style="padding: 0.5rem !important; color: #dc2626 !important; font-weight: 600 !important;">Deductions</th>
+                                    <th style="padding: 0.5rem !important; color: #4f46e5 !important; font-weight: 600 !important;">Net Paid</th>
+                                    <th style="padding: 0.5rem !important; color: #374151 !important; font-weight: 600 !important; text-align: right !important;">Status</th>
+                                </tr>
+                            </thead>
+                                                        <tbody>
+                                @forelse($payrolls as $pay)
+                                    <tr style="border-bottom: 1px solid #e5e7eb !important;">
+                                        <td style="padding: 0.5rem !important; font-weight: 600 !important; color: #111827 !important;">{{ $pay->pay_period }}</td>
+                                        <td style="padding: 0.5rem !important;">${{ number_format($pay->base_salary, 2) }}</td>
+                                        <td style="padding: 0.5rem !important; color: #059669 !important;">+${{ number_format($pay->bonus, 2) }}</td>
+                                        <td style="padding: 0.5rem !important; color: #dc2626 !important;">-${{ number_format($pay->deductions, 2) }}</td>
+                                        <td style="padding: 0.5rem !important; font-weight: 700 !important; color: #4f46e5 !important;">${{ number_format($pay->net_pay, 2) }}</td>
+                                        <td style="padding: 0.5rem !important; text-align: right !important; space-x: 2px;">
+                                            <!-- 👁️ INTERACTIVE POPUP VIEW TRIGGER -->
+                                            <button onclick="openPayslipModal('{{ $pay->pay_period }}', '{{ number_format($pay->base_salary, 2) }}', '{{ number_format($pay->bonus, 2) }}', '{{ number_format($pay->deductions, 2) }}', '{{ number_format($pay->net_pay, 2) }}')" style="background-color: #f3f4f6 !important; color: #374151 !important; border: 1px solid #d1d5db !important; padding: 0.25rem 0.5rem !important; font-size: 0.75rem !important; border-radius: 0.25rem !important; cursor: pointer !important; margin-right: 0.5rem !important;">
+                                                View Slip
+                                            </button>
+                                            
+                                            <span style="padding: 0.25rem 0.5rem !important; font-size: 0.75rem !important; font-weight: 600 !important; background-color: #d1fae5 !important; color: #065f46 !important; border-radius: 9999px !important; display: inline-block !important;">
+                                                Received
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="6" style="padding: 1rem !important; text-align: center !important; color: #9ca3af !important;">No payslips generated for your profile yet.</td></tr>
+                                @endforelse
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+
+
             </div>
 
         </div>
     </div>
+
+        <!-- 📄 MODAL DISPLAY CANVAS WRAPPER -->
+    <div id="payslipModal" style="display: none; position: fixed !important; z-index: 9999 !important; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+        <div style="background-color: #ffffff !important; padding: 2rem !important; border-radius: 0.5rem !important; width: 100% !important; max-width: 500px !important; border: 1px solid #e5e7eb !important; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            
+            <!-- Invoice Header Header -->
+            <div style="display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px dashed #e5e7eb !important; padding-bottom: 1rem !important; margin-bottom: 1.5rem !important;">
+                <div>
+                    <h4 style="font-size: 1.25rem !important; font-weight: 700 !important; color: #111827 !important; margin: 0 !important;">OFFICIAL PAYSLIP</h4>
+                    <p style="font-size: 0.75rem !important; color: #6b7280 !important; margin: 0 !important;">Corporate Compensation Breakdown Statement</p>
+                </div>
+                <button onclick="closePayslipModal()" style="background: none !important; border: none !important; font-size: 1.5rem !important; color: #9ca3af !important; cursor: pointer !important;">&times;</button>
+            </div>
+
+            <!-- Profile Info Metrics -->
+            <div style="margin-bottom: 1rem !important; font-size: 0.875rem !important; color: #4b5563 !important;">
+                <p style="margin: 0.25rem 0 !important;"><strong>Employee:</strong> {{ auth()->user()->name }}</p>
+                <p style="margin: 0.25rem 0 !important;"><strong>Designation:</strong> {{ auth()->user()->job_title ?? 'Staff Member' }}</p>
+                <p style="margin: 0.25rem 0 !important;"><strong>Pay Cycle:</strong> <span id="modalPeriod" style="font-family: monospace !important; font-weight: bold !important;"></span></p>
+            </div>
+
+            <!-- Detailed Breakdown Item Ledger Grid -->
+            <div style="border: 1px solid #e5e7eb !important; border-radius: 0.375rem !important; overflow: hidden !important; margin-bottom: 1.5rem !important;">
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.5rem 1rem !important; background-color: #f3f4f6 !important; font-size: 0.75rem !important; font-weight: 600 !important; color: #374151 !important;">
+                    <span>DESCRIPTION</span>
+                    <span>AMOUNT</span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.75rem 1rem !important; border-bottom: 1px solid #e5e7eb !important; font-size: 0.875rem !important;">
+                    <span style="color: #4b5563 !important;">Base Contract Salary Rate</span>
+                    <span style="font-weight: 600 !important;" id="modalBase"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.75rem 1rem !important; border-bottom: 1px solid #e5e7eb !important; font-size: 0.875rem !important;">
+                    <span style="color: #059669 !important;">Performance Incentives / Bonuses</span>
+                    <span style="color: #059669 !important; font-weight: 600 !important;">+$<span id="modalBonus"></span></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.75rem 1rem !important; font-size: 0.875rem !important;">
+                    <span style="color: #dc2626 !important;">Absence Penalty / Account Deductions</span>
+                    <span style="color: #dc2626 !important; font-weight: 600 !important;">-$<span id="modalDeductions"></span></span>
+                </div>
+            </div>
+
+            <!-- Net Disbursed Grand Total Footer -->
+            <div style="background-color: #eef2ff !important; padding: 1rem !important; border-radius: 0.375rem !important; display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 1.5rem !important;">
+                <span style="font-weight: 700 !important; color: #374151 !important; font-size: 0.875rem !important;">NET DISBURSED AMOUNT</span>
+                <span style="font-size: 1.5rem !important; font-weight: 800 !important; color: #4f46e5 !important;">$<span id="modalNet"></span></span>
+            </div>
+
+            <!-- Close Action Button -->
+            <button onclick="closePayslipModal()" style="width: 100% !important; background-color: #374151 !important; color: #ffffff !important; font-weight: 600 !important; padding: 0.5rem 1rem !important; border-radius: 0.375rem !important; font-size: 0.875rem !important; border: none !important; cursor: pointer !important;">
+                Dismiss Statement View
+            </button>
+        </div>
+    </div>
+
+    <!-- 🧠 MODAL INTERACTION CONTROLLER SCRIPT -->
+    <script>
+        function openPayslipModal(period, base, bonus, deductions, net) {
+            document.getElementById('modalPeriod').innerText = period;
+            document.getElementById('modalBase').innerText = '$' + base;
+            document.getElementById('modalBonus').innerText = bonus;
+            document.getElementById('modalDeductions').innerText = deductions;
+            document.getElementById('modalNet').innerText = net;
+            
+            document.getElementById('payslipModal').style.display = 'flex';
+        }
+
+        function closePayslipModal() {
+            document.getElementById('payslipModal').style.display = 'none';
+        }
+    </script>
+
 </x-app-layout>
