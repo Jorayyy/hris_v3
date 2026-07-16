@@ -10,19 +10,22 @@ use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
-    public function index()
+        public function index()
     {
         $user = auth()->user();
         $today = now()->toDateString();
 
         // 🔄 If the admin clicks the toggle link to view their own attendance:
         if (request()->has('view') && request()->get('view') === 'attendance') {
-            // Load the exact same 8-point attendance dataset for this admin account
+            // Load the complete attendance dataset for this admin account
             $todayLog = \App\Models\TimeLog::where('user_id', $user->id)->where('date', $today)->first();
             $timeLogs = \App\Models\TimeLog::where('user_id', $user->id)->latest()->take(10)->get();
             $leaveRequests = \App\Models\LeaveRequest::where('user_id', $user->id)->latest()->get();
+            
+            // 🛑 ADD THIS CRITICAL LINE TO DATA FEED PAYSLIPS FOR THE ADMIN ACC:
+            $payrolls = \App\Models\Payroll::where('user_id', $user->id)->latest()->get();
 
-            return view('dashboard', compact('todayLog', 'timeLogs', 'leaveRequests'));
+            return view('dashboard', compact('todayLog', 'timeLogs', 'leaveRequests', 'payrolls'));
         }
 
         // Standard operational dashboard view for management tasks
@@ -32,6 +35,7 @@ class AdminController extends Controller
 
         return view('admin.dashboard', compact('employees', 'pendingLeaves', 'todayLogs'));
     }
+
 
     public function updateLeave($id, $status)
     {

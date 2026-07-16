@@ -129,10 +129,17 @@
                                     <th style="padding: 0.5rem !important; color: #b91c1c !important; font-weight: 600 !important;">OUT</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                                                        <tbody>
                                 @forelse($timeLogs as $log)
                                     <tr style="border-bottom: 1px solid #e5e7eb !important;">
-                                        <td style="padding: 0.5rem !important; color: #111827 !important; font-weight: 600 !important;">{{ $log->date }}</td>
+                                        <td style="padding: 0.5rem !important; color: #111827 !important; font-weight: 600 !important; display: flex !important; justify-content: space-between !important; align-items: center !important;">
+                                            <span>{{ $log->date }}</span>
+                                            
+                                            <!-- 👁️ INTERACTIVE DTR MODAL TRIGGER -->
+                                            <button onclick="openDTRModal('{{ $log->date }}', '{{ $log->clock_in ?? '-' }}', '{{ $log->break1_out ?? '-' }}', '{{ $log->break1_in ?? '-' }}', '{{ $log->lunch_out ?? '-' }}', '{{ $log->lunch_in ?? '-' }}', '{{ $log->break2_out ?? '-' }}', '{{ $log->break2_in ?? '-' }}', '{{ $log->clock_out ?? ($log->clock_in ? 'Active' : '-') }}')" style="background-color: #f3f4f6 !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; padding: 0.15rem 0.4rem !important; font-size: 0.70rem !important; border-radius: 0.25rem !important; cursor: pointer !important; margin-left: 0.5rem !important;">
+                                                View DTR
+                                            </button>
+                                        </td>
                                         <td style="padding: 0.5rem !important;">{{ $log->clock_in ?? '-' }}</td>
                                         <td style="padding: 0.5rem !important;">{{ $log->break1_out ?? '-' }}</td>
                                         <td style="padding: 0.5rem !important;">{{ $log->break1_in ?? '-' }}</td>
@@ -146,6 +153,7 @@
                                     <tr><td colspan="9" style="padding: 1rem !important; text-align: center !important; color: #9ca3af !important;">No records found.</td></tr>
                                 @endforelse
                             </tbody>
+
                         </table>
                     </div>
                 </div>
@@ -298,6 +306,93 @@
 
         function closePayslipModal() {
             document.getElementById('payslipModal').style.display = 'none';
+        }
+    </script>
+
+    <!-- ⏱️ DTR DETAILED MODAL CANVAS WRAPPER -->
+    <div id="dtrModal" style="display: none; position: fixed !important; z-index: 9999 !important; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+        <div style="background-color: #ffffff !important; padding: 2rem !important; border-radius: 0.5rem !important; width: 100% !important; max-width: 450px !important; border: 1px solid #e5e7eb !important; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            
+            <!-- Header Block -->
+            <div style="display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px dashed #e5e7eb !important; padding-bottom: 1rem !important; margin-bottom: 1.5rem !important;">
+                <div>
+                    <h4 style="font-size: 1.15rem !important; font-weight: 700 !important; color: #111827 !important; margin: 0 !important;">DAILY TIME RECORD BREAKDOWN</h4>
+                    <p style="font-size: 0.75rem !important; color: #6b7280 !important; margin: 0 !important;">Employee Shift Timeline Verification</p>
+                </div>
+                <button onclick="closeDTRModal()" style="background: none !important; border: none !important; font-size: 1.5rem !important; color: #9ca3af !important; cursor: pointer !important;">&times;</button>
+            </div>
+
+            <!-- Profile Info Metrics -->
+            <div style="margin-bottom: 1.25rem !important; font-size: 0.875rem !important; color: #4b5563 !important;">
+                <p style="margin: 0.25rem 0 !important;"><strong>Employee:</strong> {{ auth()->user()->name }}</p>
+                <p style="margin: 0.25rem 0 !important;"><strong>Log Date:</strong> <span id="dtrModalDate" style="font-family: monospace !important; font-weight: bold !important; color: #111827 !important;"></span></p>
+            </div>
+
+            <!-- Chronological Milestone Grid -->
+            <div style="border: 1px solid #e5e7eb !important; border-radius: 0.375rem !important; overflow: hidden !important; margin-bottom: 1.5rem !important; font-size: 0.875rem !important;">
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.5rem 1rem !important; background-color: #f3f4f6 !important; font-size: 0.75rem !important; font-weight: 600 !important; color: #374151 !important;">
+                    <span>SHIFT TRACKING MILESTONE</span>
+                    <span>TIMESTAMP RECORDED</span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #059669 !important; font-weight: 600;">🟢 Shift Clock In (IN)</span>
+                    <span id="dtrIn" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #b45309 !important;">☕ 1st Break Out</span>
+                    <span id="dtrB1O" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #4338ca !important;">↩️ 1st Break Return (IN)</span>
+                    <span id="dtrB1I" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #c2410c !important;">🍱 Lunch Break Out</span>
+                    <span id="dtrLO" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #4338ca !important;">↩️ Lunch Return (IN)</span>
+                    <span id="dtrLI" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #b45309 !important;">☕ 2nd Break Out</span>
+                    <span id="dtrB2O" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #4338ca !important;">↩️ 2nd Break Return (IN)</span>
+                    <span id="dtrB2I" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important;">
+                    <span style="color: #b91c1c !important; font-weight: 600;">🛑 Shift Clock Out (OUT)</span>
+                    <span id="dtrOut" style="font-family: monospace !important; font-weight: 600;"></span>
+                </div>
+            </div>
+
+            <!-- Close Action Button -->
+            <button onclick="closeDTRModal()" style="width: 100% !important; background-color: #374151 !important; color: #ffffff !important; font-weight: 600 !important; padding: 0.5rem 1rem !important; border-radius: 0.375rem !important; font-size: 0.875rem !important; border: none !important; cursor: pointer !important;">
+                Dismiss DTR Record
+            </button>
+        </div>
+    </div>
+
+    <!-- 🧠 DTR POPUP ENGINE CONTROLLER -->
+    <script>
+        function openDTRModal(date, cin, b1o, b1i, lo, li, b2o, b2i, cout) {
+            document.getElementById('dtrModalDate').innerText = date;
+            document.getElementById('dtrIn').innerText = cin;
+            document.getElementById('dtrB1O').innerText = b1o;
+            document.getElementById('dtrB1I').innerText = b1i;
+            document.getElementById('dtrLO').innerText = lo;
+            document.getElementById('dtrLI').innerText = li;
+            document.getElementById('dtrB2O').innerText = b2o;
+            document.getElementById('dtrB2I').innerText = b2i;
+            document.getElementById('dtrOut').innerText = cout;
+            
+            document.getElementById('dtrModal').style.display = 'flex';
+        }
+
+        function closeDTRModal() {
+            document.getElementById('dtrModal').style.display = 'none';
         }
     </script>
 

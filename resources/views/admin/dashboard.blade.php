@@ -143,10 +143,17 @@
                                     <th style="padding: 0.25rem !important; color: #b91c1c !important; font-weight: 600 !important;">OUT</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                                                        <tbody>
                                 @forelse($todayLogs as $log)
                                     <tr style="border-bottom: 1px solid #e5e7eb !important;">
-                                        <td style="padding: 0.5rem 0.25rem !important; font-weight: 600 !important; color: #111827 !important;">{{ $log->user->name }}</td>
+                                        <td style="padding: 0.5rem 0.25rem !important; font-weight: 600 !important; color: #111827 !important; display: flex !important; justify-content: space-between !important; align-items: center !important;">
+                                            <span>{{ $log->user->name }}</span>
+                                            
+                                            <!-- 👁️ FINANCIAL ACCOUNTANT AUDIT TRIGGER -->
+                                            <button onclick="openAdminDTRModal('{{ $log->user->name }}', '{{ $log->date }}', '{{ $log->clock_in ?? '-' }}', '{{ $log->break1_out ?? '-' }}', '{{ $log->break1_in ?? '-' }}', '{{ $log->lunch_out ?? '-' }}', '{{ $log->lunch_in ?? '-' }}', '{{ $log->break2_out ?? '-' }}', '{{ $log->break2_in ?? '-' }}', '{{ $log->clock_out ?? 'On Clock' }}')" style="background-color: #f3f4f6 !important; color: #4b5563 !important; border: 1px solid #d1d5db !important; padding: 0.15rem 0.4rem !important; font-size: 0.65rem !important; border-radius: 0.25rem !important; cursor: pointer !important;">
+                                                Audit DTR
+                                            </button>
+                                        </td>
                                         <td style="padding: 0.5rem 0.25rem !important;">{{ $log->clock_in ?? '-' }}</td>
                                         <td style="padding: 0.5rem 0.25rem !important;">{{ $log->break1_out ?? '-' }}</td>
                                         <td style="padding: 0.5rem 0.25rem !important;">{{ $log->break1_in ?? '-' }}</td>
@@ -160,6 +167,7 @@
                                     <tr><td colspan="9" style="padding: 1rem !important; text-align: center !important; color: #9ca3af !important;">No logs yet today.</td></tr>
                                 @endforelse
                             </tbody>
+
                         </tbody>
                         </table>
                     </div>
@@ -169,4 +177,93 @@
 
         </div>
     </div>
+
+        <!-- 📄 MANAGEMENT ACCOUNTING AUDIT MODAL CANVAS -->
+    <div id="adminDtrModal" style="display: none; position: fixed !important; z-index: 9999 !important; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+        <div style="background-color: #ffffff !important; padding: 2rem !important; border-radius: 0.5rem !important; width: 100% !important; max-width: 450px !important; border: 1px solid #e5e7eb !important; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            
+            <!-- Header Frame -->
+            <div style="display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px dashed #e5e7eb !important; padding-bottom: 1rem !important; margin-bottom: 1.5rem !important;">
+                <div>
+                    <h4 style="font-size: 1.15rem !important; font-weight: 700 !important; color: #111827 !important; margin: 0 !important;">FINANCIAL DTR AUDIT SLIP</h4>
+                    <p style="font-size: 0.75rem !important; color: #6b7280 !important; margin: 0 !important;">Corporate Verification Terminal Ledger</p>
+                </div>
+                <button onclick="closeAdminDTRModal()" style="background: none !important; border: none !important; font-size: 1.5rem !important; color: #9ca3af !important; cursor: pointer !important;">&times;</button>
+            </div>
+
+            <!-- Context Properties -->
+            <div style="margin-bottom: 1.25rem !important; font-size: 0.875rem !important; color: #4b5563 !important;">
+                <p style="margin: 0.25rem 0 !important;"><strong>Target Worker:</strong> <span id="auditEmpName" style="font-weight: bold !important; color: #111827 !important;"></span></p>
+                <p style="margin: 0.25rem 0 !important;"><strong>Logged Date:</strong> <span id="auditLogDate" style="font-family: monospace !important;"></span></p>
+            </div>
+
+            <!-- Timeline Verification Parameters Grid -->
+            <div style="border: 1px solid #e5e7eb !important; border-radius: 0.375rem !important; overflow: hidden !important; margin-bottom: 1.5rem !important; font-size: 0.875rem !important;">
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.5rem 1rem !important; background-color: #f3f4f6 !important; font-size: 0.75rem !important; font-weight: 600 !important; color: #374151 !important;">
+                    <span>TIMELINE MILESTONE</span>
+                    <span>VERIFIED TIMESTAMP</span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #059669 !important; font-weight: 600;">🟢 Shift Clock In (IN)</span>
+                    <span id="audIn" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #b45309 !important;">☕ 1st Break Out</span>
+                    <span id="audB1O" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #4338ca !important;">↩️ 1st Break Return (IN)</span>
+                    <span id="audB1I" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #c2410c !important;">🍱 Lunch Break Out</span>
+                    <span id="audLO" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #4338ca !important;">↩️ Lunch Return (IN)</span>
+                    <span id="audLI" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #b45309 !important;">☕ 2nd Break Out</span>
+                    <span id="audB2O" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important; border-bottom: 1px solid #e5e7eb !important;">
+                    <span style="color: #4338ca !important;">↩️ 2nd Break Return (IN)</span>
+                    <span id="audB2I" style="font-family: monospace !important;"></span>
+                </div>
+                <div style="display: flex !important; justify-content: space-between !important; padding: 0.6rem 1rem !important;">
+                    <span style="color: #b91c1c !important; font-weight: 600;">🛑 Shift Clock Out (OUT)</span>
+                    <span id="audOut" style="font-family: monospace !important; font-weight: 600;"></span>
+                </div>
+            </div>
+
+            <!-- Dismiss Button -->
+            <button onclick="closeAdminDTRModal()" style="width: 100% !important; background-color: #374151 !important; color: #ffffff !important; font-weight: 600 !important; padding: 0.5rem 1rem !important; border-radius: 0.375rem !important; font-size: 0.875rem !important; border: none !important; cursor: pointer !important;">
+                Close Audit Window
+            </button>
+        </div>
+    </div>
+
+    <!-- 🧠 BACKEND SCRIPT CONTROLLER -->
+    <script>
+        function openAdminDTRModal(name, date, cin, b1o, b1i, lo, li, b2o, b2i, cout) {
+            document.getElementById('auditEmpName').innerText = name;
+            document.getElementById('auditLogDate').innerText = date;
+            document.getElementById('audIn').innerText = cin;
+            document.getElementById('audB1O').innerText = b1o;
+            document.getElementById('audB1I').innerText = b1i;
+            document.getElementById('audLO').innerText = lo;
+            document.getElementById('audLI').innerText = li;
+            document.getElementById('audB2O').innerText = b2o;
+            document.getElementById('audB2I').innerText = b2i;
+            document.getElementById('audOut').innerText = cout;
+            
+            document.getElementById('adminDtrModal').style.display = 'flex';
+        }
+
+        function closeAdminDTRModal() {
+            document.getElementById('adminDtrModal').style.display = 'none';
+        }
+    </script>
+
 </x-app-layout>
